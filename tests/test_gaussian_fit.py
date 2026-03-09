@@ -1,0 +1,44 @@
+import numpy as np
+from fastapi.testclient import TestClient
+
+from indigoapi.analyses.peak_fitting import gaussian
+from indigoapi.client import AnalysisClient
+from indigoapi.main import start_api
+
+
+def test_gaussian_fit_with_client():
+    np.random.seed(1)
+
+    x = np.linspace(-5, 5, 200)
+    true_amp, true_center, true_sigma = 3.0, 1.2, 0.8
+    y = gaussian(x, true_amp, true_center, true_sigma)
+    y_noisy = y + np.random.rand(y.shape[-1]) / 5
+
+    app = start_api()
+
+    # Use context manager to trigger lifespan
+    with TestClient(app) as client_http:
+        # Now queue_manager exists
+        client = AnalysisClient(base_url=str(client_http.base_url), session=client_http)  # type: ignore
+
+        # Submit job
+        client.submit("gaussian_fit", {"x": x, "y": y_noisy})
+        result = client.get_result()
+
+        # Validate results
+        res = result.result
+        assert abs(res["amplitude"] - true_amp) < 0.2
+        assert abs(res["position"] - true_center) < 0.2
+        assert abs(res["width"] - true_sigma) < 0.2
+
+
+def test_client_lists_analyses():
+
+    app = start_api()
+
+    # Use context manager to trigger lifespan
+    with TestClient(app) as client_http:
+        # Now queue_manager exists
+        client = AnalysisClient(base_url=str(client_http.base_url), session=client_http)  # type: ignore
+
+        client.list_analyses()

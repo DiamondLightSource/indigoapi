@@ -1,0 +1,20 @@
+# Changes here will be overwritten by Copier
+_commit: 5.0.2
+_src_path: https://github.com/DiamondLightSource/python-copier-template.git
+author_email: Richard.Dixey@Diamond.ac.uk
+author_name: Richard Dixey
+component_lifecycle: experimental
+component_owner: group:default/data_analysis
+component_type: service
+description: An API for small fast data analysis jobs at Diamond Light Source
+distribution_name: indigoapi
+docker: true
+docker_debug: false
+docs_type: README
+git_platform: github.com
+github_org: DiamondLightSource
+package_name: indigoapi
+pypi: true
+repo_name: indigoapi
+strict_typing: false
+type_checker: pyright
