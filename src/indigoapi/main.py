@@ -11,7 +11,7 @@ from indigoapi.api.routes import ROUTER
 from indigoapi.cleanup import cleanup_results
 from indigoapi.config import Config
 from indigoapi.queue_manager import QueueManager
-from indigoapi.rabbit_listener import RabbitListener
+from indigoapi.rabbitmq_listener import RabbitMQListener
 
 from . import __version__
 
@@ -36,10 +36,10 @@ async def lifespan(app: FastAPI):
         )
     )
 
-    rabbit_listener = RabbitListener(
+    rabbit_listener = RabbitMQListener(
         queue_manager=queue_manager,
         url=config.rabbitmq.url,
-        queue_name=config.rabbitmq.queue,
+        queue_names=config.rabbitmq.queues,
     )
 
     rabbit_task = asyncio.create_task(rabbit_listener.start())

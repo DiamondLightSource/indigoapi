@@ -12,7 +12,7 @@ class ServerConfig(BaseModel):
 
 class RabbitMQConfig(BaseModel):
     url: str = "ixx-rabbitmq-daq.diamond.ac.uk"
-    queue: str = "analysis_jobs"  # this is where rabbitmq listens
+    queues: list[str] = ["analysis_jobs"]  # this is where rabbitmq listens
 
 
 class QueueConfig(BaseModel):

@@ -18,4 +18,6 @@ plugins:
 
 rabbitmq:
   url: "i15-1-rabbitmq-daq.diamond.ac.uk"
-  queue: "analysis_jobs" # this is where rabbitmq listens
+  queues:
+    - analysis_jobs
+    # - other_jobs

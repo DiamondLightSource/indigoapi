@@ -10,14 +10,14 @@ from indigoapi.queue_manager import QueueManager
 
 logger = logging.getLogger(__name__)
 
-RETRY_FREQUENCY = 10  # in seconds
+RETRY_FREQUENCY = 30  # in seconds
 
 
-class RabbitListener:
-    def __init__(self, queue_manager: QueueManager, url: str, queue_name: str):
+class RabbitMQListener:
+    def __init__(self, queue_manager: QueueManager, url: str, queue_names: list[str]):
         self.queue_manager = queue_manager
         self.url = url
-        self.queue_name = queue_name
+        self.queue_names = queue_names
         self.connection = None
 
     async def start(self):
@@ -27,21 +27,19 @@ class RabbitListener:
                 logger.info("Connecting to RabbitMQ")
 
                 connection = await aio_pika.connect_robust(self.url)
-
                 channel = await connection.channel()
 
-                queue = await channel.declare_queue(
-                    self.queue_name,
-                    durable=True,
-                )
+                for queue_name in self.queue_names:
+                    queue = await channel.declare_queue(
+                        queue_name,
+                        durable=True,
+                    )
 
-                logger.info(f"Listening on {self.queue_name}")
+                    await queue.consume(self._handle_message)
 
-                await queue.consume(self._handle_message)
+                    logger.info(f"Listening on {queue_name}")
 
-                # wait until connection closes
                 await connection.closed()
-                # if the connection closes it will loop and try to connect again
 
             except Exception as e:
                 logger.error(f"RabbitMQ listener failed: {e}")
