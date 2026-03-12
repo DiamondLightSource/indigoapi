@@ -10,6 +10,11 @@ class ServerConfig(BaseModel):
     port: int = 8000
 
 
+class RabbitMQConfig(BaseModel):
+    url: str = "ixx-rabbitmq-daq.diamond.ac.uk"
+    queue: str = "analysis_jobs"  # this is where rabbitmq listens
+
+
 class QueueConfig(BaseModel):
     workers: int = 2
 
@@ -36,6 +41,7 @@ class Config(BaseModel):
     results: ResultsConfig = ResultsConfig()
     cleanup: CleanupConfig = CleanupConfig()
     plugins: PluginsConfig = PluginsConfig()
+    rabbitmq: RabbitMQConfig = RabbitMQConfig()
 
     @classmethod
     def load_config(cls, path: str | Path = "config.yaml") -> Self:

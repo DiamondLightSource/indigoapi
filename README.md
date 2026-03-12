@@ -32,6 +32,34 @@ To start the api server run in dev mode:
 
 uvicorn indigoapi.main:start_api --reload --factory --host 127.0.0.1 --port 8000
 
+The structure of this app is defined below. IndigoAPI can add jobs to the queue in one of two ways. 
+Either you send a request, via the client or any http request to the API endpoint which adds it to the queue. 
+
+Alternatively jobs can be added automatically by listening to a RabbitMQ message stream. 
+
+Either way jobs are added to the queue and run first-in-first-out. 
+Once jobs are run, results can be returned to the client or via a reuqest with the specific job uuid.
+
+Results are kept for a defined period of time, periodically the expired results are checked and removed.
+
+
+             HTTP Client ────────
+                  │             │
+                  ▼             │
+              IndigoAPI         │
+                  │             │
+                  ▼             ▼
+            QueueManager ──► Results
+                  │             
+                  │          
+                  │         
+                  │
+                  ▼
+                Workers
+                  ▲
+                  │
+RabbitMQ ──► RabbitListener
+
 ```
 python -m indigoapi --version
 ```

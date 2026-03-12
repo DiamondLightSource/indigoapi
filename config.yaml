@@ -6,12 +6,16 @@ queue:
   workers: 4
 
 results:
-  ttl_seconds: 3600
+  ttl_seconds: 3600 #time to live of results before deletion
 
 cleanup:
-  interval_seconds: 300
+  interval_seconds: 300 #frequency of checking for deletable results
 
 plugins:
   paths:
     - ./plugins # local folder for plugins
   github_repos: # list of GitHub repos with analysis code
+
+rabbitmq:
+  url: "i15-1-rabbitmq-daq.diamond.ac.uk"
+  queue: "analysis_jobs" # this is where rabbitmq listens

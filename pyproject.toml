@@ -21,6 +21,7 @@ dependencies = [
     "uvicorn",
     "httpx",
     "gitpython",
+    "aio-pika",
 ] # Add project dependencies here, e.g. ["click", "numpy"]
 dynamic = ["version"]
 license.file = "LICENSE"
