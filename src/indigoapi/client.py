@@ -48,22 +48,22 @@ class AnalysisClient:
         else:
             return obj
 
-    def _serialisable_payload(self, payload: dict):
+    def _serialisable_inputs(self, inputs: dict):
 
-        for k, v in payload.items():
-            payload[k] = self._convert_to_serialisable(v)
+        for k, v in inputs.items():
+            inputs[k] = self._convert_to_serialisable(v)
 
-        return payload
+        return inputs
 
-    def submit(self, analysis_type: str, payload: dict[str, Any]) -> UUID:
+    def submit(self, analysis_type: str, inputs: dict[str, Any]) -> UUID:
         """
         Submit an analysis job.
         Returns the request_id.
         """
 
-        payload = self._serialisable_payload(payload)
+        inputs = self._serialisable_inputs(inputs)
 
-        data = {"analysis_type": analysis_type, "payload": payload}
+        data = {"analysis_type": analysis_type, "inputs": inputs}
         resp = self.session.post(f"{self.base_url}/analyse", json=data)
         resp.raise_for_status()
         request_id = UUID(resp.json()["request_id"])

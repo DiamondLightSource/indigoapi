@@ -49,9 +49,9 @@ class RabbitMQListener:
 
         async with message.process():
             try:
-                payload = json.loads(message.body)
+                inputs = json.loads(message.body)
 
-                job = AnalysisRequest(**payload)
+                job = AnalysisRequest(**inputs)
 
                 logger.info(f"RabbitMQ job received: {job.request_id}")
 
