@@ -63,3 +63,74 @@ RabbitMQ ──► RabbitListener
 ```
 python -m indigoapi --version
 ```
+
+1. Build and push your Docker image
+
+Your chart references an image like:
+
+image:
+  repository: ghcr.io/your-org/indigoapi
+  tag: latest
+
+So first build and push it.
+
+Example:
+
+docker build -t ghcr.io/your-org/indigoapi:latest .
+docker push ghcr.io/your-org/indigoapi:latest
+
+If you use a private registry you may also need a Kubernetes imagePullSecret.
+
+2. Check the chart renders correctly
+
+Before installing, render the templates:
+
+helm template indigoapi ./helm/indigoapi
+
+You should see:
+
+Deployment
+
+Service
+
+ConfigMap
+
+You can also validate against Kubernetes:
+
+helm template indigoapi ./helm/indigoapi | kubectl apply --dry-run=client -f -
+3. Install the chart
+
+From the root of your repo:
+
+helm install indigoapi ./helm/indigoapi
+
+indigoapi here is the release name.
+
+Helm will create:
+
+Deployment
+Service
+ConfigMap
+
+in your cluster.
+
+4. Check the deployment
+
+Check pods:
+
+kubectl get pods
+
+Example result:
+
+indigoapi-0.1.0-7f6c5c9fbb-abcde   Running
+
+Check services:
+
+kubectl get svc
+5. Test the API
+
+Port forward the service:
+
+kubectl port-forward svc/indigoapi-0.1.0 8000:8000
+
+http://localhost:8000/docs
