@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: "{{ include "indigoapi.fullname" . }}"
+  labels:
+    app: "{{ include "indigoapi.name" . }}"
+
+spec:
+  replicas: {{ .Values.replicaCount }}
+
+  selector:
+    matchLabels:
+      app: "{{ include "indigoapi.name" . }}"
+
+  template:
+    metadata:
+      labels:
+        app: "{{ include "indigoapi.name" . }}"
+
+      annotations:
+        checksum/config: "{{ .Values.config | toYaml | sha256sum }}"
+
+    spec:
+      containers:
+        - name: indigoapi
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: "{{ .Values.image.pullPolicy }}"
+
+          ports:
+            - containerPort: 8000
+
+          volumeMounts:
+            - name: config
+              mountPath: /app/config.yaml
+              subPath: config.yaml
+
+          livenessProbe:
+            httpGet:
+              path: /docs
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+
+          readinessProbe:
+            httpGet:
+              path: /docs
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 5
+
+{{- if .Values.resources }}
+          resources:
+{{ toYaml .Values.resources | nindent 12 }}
+{{- end }}
+
+      volumes:
+        - name: config
+          configMap:
+            name: "{{ include "indigoapi.fullname" . }}-config"
