@@ -26,7 +26,7 @@ config:
     interval_seconds: 300
 
   rabbitmq:
-    listen_on_rabbitmq: True
+    enabled: True
     host: "ixx-rabbitmq-daq.diamond.ac.uk"
     username: "guest"
     password: "guest"

@@ -11,7 +11,7 @@ class ServerConfig(BaseModel):
 
 
 class RabbitMQConfig(BaseModel):
-    listen_to_rabbitmq: bool = True
+    enabled: bool = True
     host: str = "ixx-rabbitmq-daq.diamond.ac.uk"
     username: str = "guest"
     password: str = "guest"

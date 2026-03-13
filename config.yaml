@@ -17,7 +17,7 @@ plugins:
   github_repos: # list of GitHub repos with analysis code
 
 rabbitmq:
-  listen_on_rabbitmq: True
+  enabled: True
   host: "i15-1-rabbitmq-daq.diamond.ac.uk"
   username: "guest"
   password: "guest"

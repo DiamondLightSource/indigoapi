@@ -40,7 +40,7 @@ async def lifespan(app: FastAPI):
 
     rabbit_task: asyncio.Task | None = None
 
-    if config.rabbitmq.listen_to_rabbitmq:
+    if config.rabbitmq.enabled:
         rabbit_listener = RabbitMQListener(
             queue_manager=queue_manager,
             host=config.rabbitmq.host,
