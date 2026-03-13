@@ -11,7 +11,7 @@ class AnalysisBaseModel(BaseModel):
 
 
 class AnalysisRequest(AnalysisBaseModel):
-    analysis_type: str
+    analysis_name: str
     inputs: dict
     request_id: UUID = uuid4()
     created_at: datetime = datetime.now()
@@ -20,6 +20,7 @@ class AnalysisRequest(AnalysisBaseModel):
 class AnalysisResult(AnalysisBaseModel):
     request_id: UUID | None = None
     status: Literal["error", "failed", "running", "completed"]
+    analysis_name: str
     result: Any
     created_at: datetime
     finished_at: datetime

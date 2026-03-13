@@ -13,7 +13,7 @@ client = TestClient(app)
 def test_analysis_flow():
 
     response = client.post(
-        "/analyse", json={"analysis_type": "double", "inputs": {"value": 21}}
+        "/analyse", json={"analysis_name": "double", "inputs": {"value": 21}}
     )
 
     assert response.status_code == 200

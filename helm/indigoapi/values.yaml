@@ -26,6 +26,12 @@ config:
     interval_seconds: 300
 
   rabbitmq:
-    url: "amqp://rabbitmq:15672"
-    queues:
-      - analysis_jobs
+    listen_on_rabbitmq: True
+    host: "ixx-rabbitmq-daq.diamond.ac.uk"
+    username: "guest"
+    password: "guest"
+    port: 61613
+    destinations:
+      - "/topic/public.worker.event" #bluesky scans
+      - "/topic/gda.messages.scan" # gda scans
+      - "/topic/gda.messages.processing" # dawn stuff

@@ -24,7 +24,7 @@ class AnalysisClient:
         session: requests.Session | None = None,
     ):
         self.base_url = base_url.rstrip("/")
-        self.last_request_id: UUID | None = None
+        self.latest_request_id: UUID | None = None
         self.session = session or requests.Session()
 
     def list_analyses(self) -> list[dict[str, Any]]:
@@ -51,7 +51,7 @@ class AnalysisClient:
 
         return obj
 
-    def submit(self, analysis_type: str, **inputs: Any) -> UUID:
+    def submit(self, analysis_name: str, **inputs: Any) -> UUID:
         """
         Submit an analysis job.
 
@@ -62,7 +62,7 @@ class AnalysisClient:
         inputs = self._convert_to_serialisable(inputs)
 
         data = {
-            "analysis_type": analysis_type,
+            "analysis_name": analysis_name,
             "inputs": inputs,
         }
 
@@ -70,13 +70,13 @@ class AnalysisClient:
         resp.raise_for_status()
 
         request_id = UUID(resp.json()["request_id"])
-        self.last_request_id = request_id
+        self.latest_request_id = request_id
 
         return request_id
 
     def request_result(self, request_id: UUID) -> AnalysisResult | None:
 
-        resp = self.session.get(f"{self.base_url}/result/{request_id}")
+        resp = self.session.get(f"{self.base_url}/result/id/{request_id}")
 
         if resp.status_code == 404:
             return None
@@ -93,16 +93,17 @@ class AnalysisClient:
         poll_interval: float = 0.1,
     ) -> AnalysisResult:
 
-        if self.last_request_id is None:
+        if self.latest_request_id is None:
             return AnalysisResult(
                 status="error",
+                analysis_name="",
                 result=None,
                 created_at=datetime.now(),
                 finished_at=datetime.now(),
             )
 
         return self.get_request_id_result(
-            self.last_request_id,
+            self.latest_request_id,
             timeout,
             poll_interval,
         )

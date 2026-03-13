@@ -11,8 +11,21 @@ class ServerConfig(BaseModel):
 
 
 class RabbitMQConfig(BaseModel):
-    url: str = "ixx-rabbitmq-daq.diamond.ac.uk"
-    queues: list[str] = ["analysis_jobs"]  # this is where rabbitmq listens
+    listen_to_rabbitmq: bool = True
+    host: str = "ixx-rabbitmq-daq.diamond.ac.uk"
+    username: str = "guest"
+    password: str = "guest"
+    port: int = 61613
+    destinations: list[str] = [
+        "/topic/public.worker.event",  # bluesky scans
+        "/topic/gda.messages.scan",  # gda scans"
+        "/topic/gda.messages.processing",  # dawn stuff
+    ]
+    # this is where rabbitmq listens
+
+    @property
+    def address(self):
+        return f"stomp://{self.username}:{self.password}@{self.host}:{self.port}/"
 
 
 class QueueConfig(BaseModel):
@@ -48,6 +61,8 @@ class Config(BaseModel):
         path = Path(path)
         if not path.exists():
             return cls()
-        with open(path) as f:
-            data = yaml.safe_load(f)
-        return cls(**data)
+        else:
+            with open(path) as f:
+                data = yaml.safe_load(f)
+                print(data)
+            return cls(**data)

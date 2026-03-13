@@ -6,6 +6,7 @@ from fastapi import APIRouter, HTTPException, Request
 
 from indigoapi.analyses.registry import get_analysis, list_analyses
 from indigoapi.models import AnalysisRequest, AnalysisResult
+from indigoapi.queue_manager import QueueManager
 
 ROUTER = APIRouter()
 
@@ -35,14 +36,25 @@ async def available_analyses() -> list[dict[str, Any]]:
 
 @ROUTER.post("/analyse")
 async def analyse(request: Request, job: AnalysisRequest):
-    queue = request.app.state.queue_manager
+    queue: QueueManager = request.app.state.queue_manager
     await queue.enqueue(job)
     return {"request_id": job.request_id}
 
 
-@ROUTER.get("/result/{request_id}", response_model=AnalysisResult)
+@ROUTER.get("/result/latest", response_model=AnalysisResult)
+async def get_latest_result(request: Request):
+
+    queue_manager = request.app.state.queue_manager
+
+    if queue_manager.latest_result is None:
+        raise HTTPException(status_code=404, detail="No results yet")
+
+    return queue_manager.latest_result
+
+
+@ROUTER.get("/result/id/{request_id}")
 async def result(request: Request, request_id: UUID):
-    queue = request.app.state.queue_manager
+    queue: QueueManager = request.app.state.queue_manager
     if request_id not in queue.results:
         raise HTTPException(404, "Result not found")
     result, _ = queue.results[request_id]

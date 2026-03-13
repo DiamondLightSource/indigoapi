@@ -16,6 +16,8 @@ class QueueManager:
         self.queue: asyncio.Queue[AnalysisRequest] = asyncio.Queue()
         self.results: dict[UUID, tuple[AnalysisResult, float]] = {}
         self.workers = workers
+        self.latest_result: AnalysisResult | None = None
+
         logger.info(self.queue)
 
     async def enqueue(self, job: AnalysisRequest):
@@ -28,13 +30,13 @@ class QueueManager:
             job = await self.queue.get()
 
             try:
-                analysis_fn = get_analysis(job.analysis_type)
+                analysis_fn = get_analysis(job.analysis_name)
 
-                # IMPORTANT CHANGE
                 result_value = await analysis_fn(**job.inputs)
 
-                response = AnalysisResult(
+                result = AnalysisResult(
                     request_id=job.request_id,
+                    analysis_name=job.analysis_name,
                     status="completed",
                     result=result_value,
                     created_at=job.created_at,
@@ -42,8 +44,9 @@ class QueueManager:
                 )
 
             except Exception as e:
-                response = AnalysisResult(
+                result = AnalysisResult(
                     request_id=job.request_id,
+                    analysis_name=job.analysis_name,
                     status="failed",
                     result=str(e),
                     created_at=job.created_at,
@@ -52,4 +55,6 @@ class QueueManager:
 
                 print(f"Job {job.request_id} failed: {e}")
 
-            self.results[job.request_id] = (response, time.time())
+            self.results[job.request_id] = (result, time.time())
+            # store latest result
+            self.latest_result = result

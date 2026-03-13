@@ -17,7 +17,12 @@ plugins:
   github_repos: # list of GitHub repos with analysis code
 
 rabbitmq:
-  url: "amqp://guest:guest@i15-1-rabbitmq-daq.diamond.ac.uk:5672/"
-  queues:
-    - analysis_jobs
-    # - other_jobs
+  listen_on_rabbitmq: True
+  host: "i15-1-rabbitmq-daq.diamond.ac.uk"
+  username: "guest"
+  password: "guest"
+  port: 61613
+  destinations:
+    - "/topic/public.worker.event" #bluesky scans
+    - "/topic/gda.messages.scan" # gda scans
+    - "/topic/gda.messages.processing" # dawn stuff
