@@ -22,7 +22,7 @@ def test_gaussian_fit_with_client():
         client = AnalysisClient(base_url=str(client_http.base_url), session=client_http)  # type: ignore
 
         # Submit job
-        client.submit("gaussian_fit", {"x": x, "y": y_noisy})
+        client.submit("gaussian_fit", x=x, y=y_noisy)
         result = client.get_result()
 
         # Validate results

@@ -15,8 +15,8 @@ def analysis(name: str):
         else:
 
             @wraps(func)
-            async def async_fn(inputs):
-                return await asyncio.to_thread(func, inputs)
+            async def async_fn(*args, **kwargs):
+                return await asyncio.to_thread(func, *args, **kwargs)
 
         register_analysis(name, async_fn)
         return async_fn

@@ -45,15 +45,12 @@ Results are kept for a defined period of time, periodically the expired results 
 
              HTTP Client ────────
                   │             │
-                  ▼             │
-              IndigoAPI         │
-                  │             │
                   ▼             ▼
-            QueueManager ──► Results
-                  │             
-                  │          
-                  │         
-                  │
+              IndigoAPI ──► Results        
+                  │ 
+                  ▼ 
+            QueueManager 
+                  │                  
                   ▼
                 Workers
                   ▲
@@ -69,17 +66,16 @@ python -m indigoapi --version
 Your chart references an image like:
 
 image:
-  repository: ghcr.io/your-org/indigoapi
+  repository: ghcr.io/diamondlightsource/indigoapi
   tag: latest
 
 So first build and push it.
 
 Example:
 
-docker build -t ghcr.io/your-org/indigoapi:latest .
-docker push ghcr.io/your-org/indigoapi:latest
+podman build -t ghcr.io/diamondlightsource/indigoapi:latest .
+podman push ghcr.io/diamondlightsource/indigoapi:latest
 
-If you use a private registry you may also need a Kubernetes imagePullSecret.
 
 2. Check the chart renders correctly
 
@@ -90,9 +86,7 @@ helm template indigoapi ./helm/indigoapi
 You should see:
 
 Deployment
-
 Service
-
 ConfigMap
 
 You can also validate against Kubernetes:

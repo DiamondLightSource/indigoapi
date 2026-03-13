@@ -29,7 +29,9 @@ class QueueManager:
 
             try:
                 analysis_fn = get_analysis(job.analysis_type)
-                result_value = await analysis_fn(job.inputs)
+
+                # IMPORTANT CHANGE
+                result_value = await analysis_fn(**job.inputs)
 
                 response = AnalysisResult(
                     request_id=job.request_id,

@@ -17,7 +17,7 @@ plugins:
   github_repos: # list of GitHub repos with analysis code
 
 rabbitmq:
-  url: "i15-1-rabbitmq-daq.diamond.ac.uk"
+  url: "amqp://guest:guest@i15-1-rabbitmq-daq.diamond.ac.uk:5672/"
   queues:
     - analysis_jobs
     # - other_jobs

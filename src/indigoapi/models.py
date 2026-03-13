@@ -12,7 +12,7 @@ class AnalysisBaseModel(BaseModel):
 
 class AnalysisRequest(AnalysisBaseModel):
     analysis_type: str
-    payload: dict
+    inputs: dict
     request_id: UUID = uuid4()
     created_at: datetime = datetime.now()
 

@@ -9,7 +9,7 @@ def gaussian(x: np.ndarray, amplitude: float, x0: float, sigma: float) -> np.nda
 
 
 @analysis("gaussian_fit")
-def gaussian_fit(data: dict):
+def gaussian_fit(x: list[int | float], y: list):
     """
     data = {
         "x": [...],
@@ -17,8 +17,8 @@ def gaussian_fit(data: dict):
     }
     returns: dict with keys "amplitude", "position", "width"
     """
-    x = np.array(data["x"])
-    y = np.array(data["y"])
+    x = np.array(x)  # type: ignore
+    y = np.array(y)  # type: ignore
 
     # initial guess: amplitude=max(y), position=argmax(y), width=std(x)
     a0 = np.max(y)
