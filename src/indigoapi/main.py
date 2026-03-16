@@ -1,4 +1,4 @@
-"""Interface for ``python -m indigoapi``."""
+"""Interface for `python -m indigoapi`."""
 
 import asyncio
 import logging
@@ -21,15 +21,15 @@ config: Config = Config.load_config()
 @asynccontextmanager
 async def lifespan(app: FastAPI):
 
+    rabbit_task = None
+
     queue_manager = QueueManager(workers=config.queue.workers)
 
-    # start worker tasks
     workers = [
         asyncio.create_task(queue_manager.worker())
         for _ in range(queue_manager.workers)
     ]
 
-    # start cleanup task
     cleanup_task = asyncio.create_task(
         cleanup_results(
             queue_manager,
@@ -37,8 +37,6 @@ async def lifespan(app: FastAPI):
             interval=config.cleanup.interval_seconds,
         )
     )
-
-    rabbit_task: asyncio.Task | None = None
 
     if config.rabbitmq.enabled:
         rabbit_listener = RabbitMQListener(
@@ -49,15 +47,17 @@ async def lifespan(app: FastAPI):
             password=config.rabbitmq.password,
             destinations=config.rabbitmq.destinations,
         )
+
         rabbit_task = asyncio.create_task(rabbit_listener.start())
 
-    # store state
     app.state.queue_manager = queue_manager
     app.state.config = config
 
+    logging.info("API started")
+
     yield
 
-    # ---- shutdown phase ----
+    logging.info("Shutting down")
 
     for task in workers:
         task.cancel()
@@ -66,12 +66,6 @@ async def lifespan(app: FastAPI):
 
     if rabbit_task is not None:
         rabbit_task.cancel()
-
-    await asyncio.gather(*workers, return_exceptions=True)
-    await asyncio.gather(cleanup_task, return_exceptions=True)
-
-    if rabbit_task is not None:
-        await asyncio.gather(rabbit_task, return_exceptions=True)
 
 
 def start_api() -> FastAPI:

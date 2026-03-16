@@ -1,6 +1,8 @@
 import asyncio
 import json
 import logging
+import threading
+import time
 
 import stomp
 
@@ -9,8 +11,6 @@ from indigoapi.queue_manager import QueueManager
 
 logger = logging.getLogger(__name__)
 
-RETRY_INTERVAL = 30  # seconds
-
 
 class _StompListener(stomp.ConnectionListener):
     def __init__(self, queue_manager: QueueManager, loop: asyncio.AbstractEventLoop):
@@ -18,28 +18,15 @@ class _StompListener(stomp.ConnectionListener):
         self.loop = loop
 
     def on_connected(self, frame):
-        logger.info("STOMP connected")
+        logger.info("STOMP connected to RabbitMQ")
 
     def on_disconnected(self):
-        logger.warning("STOMP disconnected")
-
-    def on_heartbeat_timeout(self):
-        logger.warning("STOMP heartbeat timeout — connection likely dead")
+        logger.warning("STOMP disconnected from RabbitMQ")
 
     def on_error(self, frame):
         logger.error(f"STOMP error: {frame.body}")
 
     def on_message(self, frame):
-
-        # STOMP must send JSON like:
-
-        # message = {
-        #       "analysis_name": "gaussian_fit",
-        #       "inputs" : {"x": [1,2,3], "y" : [4,5,6]},
-        #     }
-
-        print(frame)
-
         try:
             data = json.loads(frame.body)
 
@@ -53,7 +40,8 @@ class _StompListener(stomp.ConnectionListener):
             )
 
         except Exception as e:
-            logger.error(f"Failed to process STOMP message: {e}")
+            logger.error(f"Failed to process message: {e}")
+            logger.error("Failed message:", frame.body)
 
 
 class RabbitMQListener:
@@ -73,54 +61,53 @@ class RabbitMQListener:
         self.password = password
         self.destinations = destinations
 
-        self.conn: stomp.Connection | None = None
+        self.running = True
+        self.thread: threading.Thread | None = None
 
     async def start(self):
-
         loop = asyncio.get_running_loop()
 
-        while True:
-            try:
-                logger.info("Connecting to RabbitMQ (STOMP)")
+        self.thread = threading.Thread(
+            target=self._run,
+            args=(loop,),
+            daemon=True,
+        )
 
-                self.conn = stomp.Connection(
+        self.thread.start()
+
+        logger.info("RabbitMQ listener thread started")
+
+    def _run(self, loop: asyncio.AbstractEventLoop):
+
+        attempt = 0
+
+        while self.running:
+            attempt += 1
+
+            logger.info(
+                f"RabbitMQ connection attempt {attempt} to {self.host}:{self.port}"
+            )
+
+            try:
+                conn = stomp.Connection(
                     [(self.host, self.port)],
-                    heartbeats=(10000, 10000),
-                    heart_beat_receive_scale=1.5,
                 )
 
                 listener = _StompListener(self.queue_manager, loop)
-                self.conn.set_listener("", listener)
+                conn.set_listener("", listener)
 
-                self.conn.connect(self.username, self.password, wait=True)
+                conn.connect(self.username, self.password, wait=True)
 
-                logger.info("Connected to RabbitMQ")
+                logger.info("RabbitMQ connected")
 
-                for i, destination in enumerate(self.destinations):
-                    self.conn.subscribe(
-                        destination=destination,
-                        id=str(i),
-                        ack="auto",
-                    )
+                for i, dest in enumerate(self.destinations):
+                    conn.subscribe(destination=dest, id=str(i), ack="auto")
+                    logger.info(f"Subscribed to {dest}")
 
-                    logger.info(f"Listening on {destination}")
+                while conn.is_connected():
+                    time.sleep(1)
 
-                # Wait until connection actually dies
-                while True:
-                    if not self.conn.is_connected():
-                        logger.warning("STOMP connection lost")
-                        break
-
-                    transport = self.conn.transport
-
-                    if transport is None or not transport.is_connected():
-                        logger.warning("STOMP transport closed")
-                        break
-
-                    await asyncio.sleep(0.5)
+                logger.warning("RabbitMQ connection lost")
 
             except Exception as e:
-                logger.error(f"RabbitMQ STOMP listener failed: {e}")
-
-            logger.info(f"Reconnecting in {RETRY_INTERVAL} seconds")
-            await asyncio.sleep(RETRY_INTERVAL)
+                logger.warning(f"RabbitMQ connection failed: {e}")
