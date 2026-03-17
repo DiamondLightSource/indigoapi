@@ -17,6 +17,7 @@ dependencies = [
     "scipy",
     "fastapi",
     "pydantic",
+    "pydantic_settings",
     "requests",
     "uvicorn",
     "httpx",

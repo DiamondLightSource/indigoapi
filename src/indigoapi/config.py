@@ -3,6 +3,7 @@ from typing import Self
 
 import yaml
 from pydantic import BaseModel
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class ServerConfig(BaseModel):
@@ -48,7 +49,7 @@ class PluginsConfig(BaseModel):
     github_repos: list[str] | None = []
 
 
-class Config(BaseModel):
+class Config(BaseSettings):
     server: ServerConfig = ServerConfig()
     queue: QueueConfig = QueueConfig()
     results: ResultsConfig = ResultsConfig()
@@ -56,12 +57,20 @@ class Config(BaseModel):
     plugins: PluginsConfig = PluginsConfig()
     rabbitmq: RabbitMQConfig = RabbitMQConfig()
 
+    model_config = SettingsConfigDict(
+        env_nested_delimiter="__",
+        extra="ignore",
+    )
+
     @classmethod
     def load_config(cls, path: str | Path = "config.yaml") -> Self:
         path = Path(path)
-        if not path.exists():
-            return cls()
-        else:
+
+        data = {}
+        if path.exists():
             with open(path) as f:
-                data = yaml.safe_load(f)
-            return cls(**data)
+                data = yaml.safe_load(f) or {}
+
+        # 1. load YAML into model
+        # 2. allow env vars to override it
+        return cls(**data)

@@ -1,59 +1,65 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: "{{ include "indigoapi.fullname" . }}"
-  labels:
-    app: "{{ include "indigoapi.name" . }}"
-
+  name: indigoapi
 spec:
   replicas: {{ .Values.replicaCount }}
-
   selector:
     matchLabels:
-      app: "{{ include "indigoapi.name" . }}"
-
+      app: indigoapi
   template:
     metadata:
       labels:
-        app: "{{ include "indigoapi.name" . }}"
-
-      annotations:
-        checksum/config: "{{ .Values.config | toYaml | sha256sum }}"
-
+        app: indigoapi
     spec:
       containers:
         - name: indigoapi
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
-          imagePullPolicy: "{{ .Values.image.pullPolicy }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+
+          securityContext:
+            runAsUser: {{ .Values.securityContext.runAsUser }}
+            runAsGroup: {{ .Values.securityContext.runAsGroup }}
+            runAsNonRoot: {{ .Values.securityContext.runAsNonRoot }}
+            allowPrivilegeEscalation: {{ .Values.securityContext.allowPrivilegeEscalation }}
+            readOnlyRootFilesystem: {{ .Values.securityContext.readOnlyRootFilesystem }}
 
           ports:
-            - containerPort: 8000
+            - containerPort: {{ .Values.service.port }}
 
-          volumeMounts:
-            - name: config
-              mountPath: /app/config.yaml
-              subPath: config.yaml
+          env:
+            - name: RABBITMQ__ENABLED
+              value: "{{ .Values.config.rabbitmq.enabled | quote }}"
+            - name: RABBITMQ__HOST
+              value: "{{ .Values.config.rabbitmq.host }}"
+            - name: RABBITMQ__PORT
+              value: "{{ .Values.config.rabbitmq.port | quote }}"
+            - name: RABBITMQ__USERNAME
+              value: "{{ .Values.config.rabbitmq.username }}"
+            - name: RABBITMQ__PASSWORD
+              value: "{{ .Values.config.rabbitmq.password }}"
 
-          livenessProbe:
-            httpGet:
-              path: /docs
-              port: 8000
-            initialDelaySeconds: 10
-            periodSeconds: 10
+            - name: QUEUE__WORKERS
+              value: "{{ .Values.config.queue.workers | quote }}"
 
-          readinessProbe:
-            httpGet:
-              path: /docs
-              port: 8000
-            initialDelaySeconds: 5
-            periodSeconds: 5
-
-{{- if .Values.resources }}
-          resources:
-{{ toYaml .Values.resources | nindent 12 }}
+{{- range $i, $path := .Values.config.plugins.paths }}
+            - name: PLUGINS__PATHS__{{ $i }}
+              value: "{{ $path }}"
 {{- end }}
 
-      volumes:
-        - name: config
-          configMap:
-            name: "{{ include "indigoapi.fullname" . }}-config"
+{{- range $i, $dest := .Values.config.rabbitmq.destinations }}
+            - name: RABBITMQ__DESTINATIONS__{{ $i }}
+              value: "{{ $dest }}"
+{{- end }}
+
+          resources:
+{{ toYaml .Values.resources | indent 12 }}
+
+      nodeSelector:
+{{ toYaml .Values.nodeSelector | indent 8 }}
+
+      tolerations:
+{{ toYaml .Values.tolerations | indent 8 }}
+
+      affinity:
+{{ toYaml .Values.affinity | indent 8 }}

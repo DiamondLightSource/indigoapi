@@ -1,3 +1,7 @@
+{{- define "indigoapi.name" -}}
+indigoapi
+{{- end }}
+
 {{- define "indigoapi.fullname" -}}
-indigoapi-{{ .Chart.AppVersion }}
+indigoapi
 {{- end }}
