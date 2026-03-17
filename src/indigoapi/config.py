@@ -64,5 +64,4 @@ class Config(BaseModel):
         else:
             with open(path) as f:
                 data = yaml.safe_load(f)
-                print(data)
             return cls(**data)

@@ -32,6 +32,11 @@ class AnalysisClient:
         resp.raise_for_status()
         return resp.json()
 
+    def health(self) -> dict[str, Any]:
+        resp = self.session.get(f"{self.base_url}/health")
+        resp.raise_for_status()
+        return resp.json()
+
     def _convert_to_serialisable(self, obj: Any) -> Any:
 
         if isinstance(obj, np.ndarray):

@@ -7,6 +7,15 @@ RUN apt-get update -y && apt-get install -y --no-install-recommends \
     graphviz \
     && apt-get dist-clean 
 
+
+# Install helm for the dev container. This is the recommended 
+# approach per the docs: https://helm.sh/docs/intro/install
+RUN curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3; \
+    chmod 700 get_helm.sh; \
+    ./get_helm.sh; \
+    rm get_helm.sh
+RUN helm plugin install https://github.com/losisin/helm-values-schema-json.git --version 2.3.1
+
 # The build stage installs the context into the venv
 FROM developer AS build
 
@@ -19,6 +28,8 @@ RUN apk add libc6-compat
 
 # Tell uv sync to install python in a known location so we can copy it out later
 ENV UV_PYTHON_INSTALL_DIR=/python
+
+RUN uv add debugpy
 
 # Sync the project without its dev dependencies
 RUN --mount=type=cache,target=/root/.cache/uv \
@@ -40,6 +51,24 @@ COPY --from=build /python /python
 COPY --from=build /app/.venv /app/.venv
 ENV PATH=/app/.venv/bin:$PATH
 
-# change this entrypoint if it is not the same as the repo
+
+
+# Copy the python installation from the build stage
+COPY --from=build /python /python
+
+
+# Add copy of indigoapi source to container for debugging
+WORKDIR /workspaces
+COPY --chown=1000:1000 . indigoapi
+# Make allowance for non-1000 uid
+RUN chmod o+wrX indigoapi
+
+# Switch user 1000
+USER ubuntu
+
 ENTRYPOINT ["indigoapi"]
-CMD ["--version"]
+CMD ["serve"]
+
+# # change this entrypoint if it is not the same as the repo
+# ENTRYPOINT ["indigoapi"]
+# CMD ["--version"]

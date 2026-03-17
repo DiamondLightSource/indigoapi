@@ -20,7 +20,7 @@ def main(ctx: click.Context) -> None:
 
 @main.command(name="serve")
 def serve():
-    uvicorn.run(start_api(), host="127.0.0.1", port=8000)
+    uvicorn.run(start_api(), host="0.0.0.0", port=8000)
 
 
 if __name__ == "__main__":

@@ -11,6 +11,11 @@ from indigoapi.queue_manager import QueueManager
 ROUTER = APIRouter()
 
 
+@ROUTER.get("/health")
+async def health():
+    return {"status": "ok"}
+
+
 @ROUTER.get("/get_analyses")
 async def available_analyses() -> list[dict[str, Any]]:
     analyses_info = []

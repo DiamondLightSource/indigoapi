@@ -11,6 +11,8 @@ from indigoapi.queue_manager import QueueManager
 
 logger = logging.getLogger(__name__)
 
+TIMEOUT = 10
+
 
 class _StompListener(stomp.ConnectionListener):
     def __init__(self, queue_manager: QueueManager, loop: asyncio.AbstractEventLoop):
@@ -18,10 +20,10 @@ class _StompListener(stomp.ConnectionListener):
         self.loop = loop
 
     def on_connected(self, frame):
-        logger.info("STOMP connected to RabbitMQ")
+        logger.info("RabbitMQ connected")
 
     def on_disconnected(self):
-        logger.warning("STOMP disconnected from RabbitMQ")
+        logger.warning("RabbitMQ connection lost")
 
     def on_error(self, frame):
         logger.error(f"STOMP error: {frame.body}")
@@ -41,7 +43,7 @@ class _StompListener(stomp.ConnectionListener):
 
         except Exception as e:
             logger.error(f"Failed to process message: {e}")
-            logger.error("Failed message:", frame.body)
+            logger.error(f"Failed message: {frame.body}")
 
 
 class RabbitMQListener:
@@ -91,23 +93,26 @@ class RabbitMQListener:
             try:
                 conn = stomp.Connection(
                     [(self.host, self.port)],
+                    heartbeats=(TIMEOUT * 1000, TIMEOUT * 1000),  # heartbeat in in ms
+                    timeout=TIMEOUT,
                 )
 
-                listener = _StompListener(self.queue_manager, loop)
+                listener = _StompListener(
+                    self.queue_manager,
+                    loop,
+                )
                 conn.set_listener("", listener)
-
                 conn.connect(self.username, self.password, wait=True)
-
-                logger.info("RabbitMQ connected")
 
                 for i, dest in enumerate(self.destinations):
                     conn.subscribe(destination=dest, id=str(i), ack="auto")
                     logger.info(f"Subscribed to {dest}")
 
+                if conn.is_connected():
+                    attempt = 0  # reset attempt to 0 after successful connection
+
                 while conn.is_connected():
                     time.sleep(1)
-
-                logger.warning("RabbitMQ connection lost")
 
             except Exception as e:
                 logger.warning(f"RabbitMQ connection failed: {e}")

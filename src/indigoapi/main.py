@@ -74,7 +74,13 @@ def start_api() -> FastAPI:
     logger.info(f"{MODULE_NAMES} have been loaded")
     logger.info(f"version: {__version__}")
 
-    app = FastAPI(lifespan=lifespan)
+    app = FastAPI(
+        title="IndigoAPI",
+        version=__version__,
+        description="An API for fast data analysis jobs",
+        lifespan=lifespan,
+    )
+
     app.include_router(ROUTER)
 
     return app
