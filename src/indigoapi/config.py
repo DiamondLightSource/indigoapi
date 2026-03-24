@@ -20,7 +20,7 @@ class RabbitMQConfig(BaseModel):
     destinations: list[str] = [
         "/topic/public.worker.event",  # bluesky scans
         "/topic/gda.messages.scan",  # gda scans"
-        "/topic/gda.messages.processing",  # dawn stuff
+        "/topic/gda.messages.processing",  # swmr dawn stuff
     ]
     # this is where rabbitmq listens
 
