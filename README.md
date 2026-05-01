@@ -10,8 +10,9 @@ An API for small fast data analysis jobs at Diamond Light Source
 This is where you should write a short paragraph that describes what your module does,
 how it does it, and why people should use it.
 
-Source          | <https://github.com/DiamondLightSource/indigoapi>
+What            | Where
 :---:           | :---:
+Source          | <https://github.com/DiamondLightSource/indigoapi>
 PyPI            | `pip install indigoapi`
 Docker          | `docker run ghcr.io/diamondlightsource/indigoapi:latest`
 Releases        | <https://github.com/DiamondLightSource/indigoapi/releases>
