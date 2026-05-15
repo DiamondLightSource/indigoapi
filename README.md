@@ -43,19 +43,19 @@ Once jobs are run, results can be returned to the client or via a reuqest with t
 Results are kept for a defined period of time, periodically the expired results are checked and removed.
 
 
-             HTTP Client ────────
-                  │             │
-                  ▼             ▼
-              IndigoAPI ──► Results        
-                  │ 
-                  ▼ 
-            QueueManager 
-                  │                  
-                  ▼
-                Workers
-                  ▲
-                  │
-RabbitMQ ──► RabbitListener
+                         HTTP Client ────────
+                              │             │
+                              ▼             ▼
+                          IndigoAPI ──► Results        
+                              │ 
+                              ▼ 
+                        QueueManager 
+                              │                  
+                              ▼
+                            Workers
+                              ▲
+                              │
+            RabbitMQ ──► RabbitListener
 
 ```
 python -m indigoapi --version
