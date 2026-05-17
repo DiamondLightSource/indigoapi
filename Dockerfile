@@ -7,6 +7,17 @@ RUN apt-get update -y && apt-get install -y --no-install-recommends \
     graphviz \
     && apt-get dist-clean 
 
+# Add apt-get system dependecies for runtime here if needed
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    # Git required for installing packages at runtime
+    git \
+    # gdb required for attaching debugger
+    gdb \
+    # May be required if attaching devcontainer
+    libnss-ldapd \
+    && apt-get dist-clean
+
+
 RUN apt-get update && apt-get install ffmpeg libsm6 libxext6 libgl1 libegl1 -y
 RUN apt-get update && apt-get install -y \
     libx11-xcb-dev \
