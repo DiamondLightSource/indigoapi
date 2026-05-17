@@ -14,8 +14,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     # gdb required for attaching debugger
     gdb \
     # May be required if attaching devcontainer
-    libnss-ldapd \
-    && apt-get dist-clean
+    libnss-ldapd
 
 
 RUN apt-get update && apt-get install ffmpeg libsm6 libxext6 libgl1 libegl1 -y
