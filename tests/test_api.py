@@ -5,25 +5,32 @@ from fastapi.testclient import TestClient
 
 from indigoapi.config import Config
 from indigoapi.main import start_api
-
-app = start_api()
-client = TestClient(app)
+from indigoapi.models import AnalysisRequest
 
 
-def test_analysis_flow():
+def test_analysis_flow_with_post():
 
-    response = client.post(
-        "/analyse", json={"analysis_name": "double", "inputs": {"value": 21}}
-    )
+    app = start_api()
 
-    assert response.status_code == 200
-
-    request_id = response.json()["request_id"]
+    # Use context manager to trigger lifespan
     with TestClient(app) as client_http:
-        for _ in range(10):
-            r = client_http.get(f"/result/{request_id}")
+        # Now queue_manager exists
+        client = TestClient(app)
 
-            if r.status_code == 200:
+        request = AnalysisRequest(analysis_name="double", inputs={"number": 21})
+
+        response = client.post("/analyse", json=request.model_dump(mode="json"))
+
+        assert response.status_code == 200
+
+        request_id = response.json()["request_id"]
+
+        for _ in range(10):
+            r = client_http.get(f"/result/id/{request_id}")
+
+            print(r)
+
+            if r.status_code != 200:
                 time.sleep(0.1)
                 continue
             else:
@@ -33,6 +40,8 @@ def test_analysis_flow():
 
         assert r is not None
         data = r.json()
+
+        print(data)
 
         assert data["status"] == "completed"
         assert data["result"] == 42
@@ -48,3 +57,7 @@ def test_config_loads_from_file():
 
     cfg = Config.load_config()
     assert isinstance(cfg, Config)
+
+
+if __name__ == "__main__":
+    test_analysis_flow_with_post()

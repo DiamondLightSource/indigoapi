@@ -10,17 +10,21 @@ def register_analysis(name: str, fn: Callable) -> None:
     ANALYSIS_REGISTRY[name] = fn
 
 
+def list_analyses() -> list[str]:
+
+    return list(ANALYSIS_REGISTRY.keys())
+
+
 def get_analysis(name: str) -> Callable:
     if name not in ANALYSIS_REGISTRY:
         try:
             mod = importlib.import_module(f"indigoapi.analyses.{name}")
             func = getattr(mod, name)
             ANALYSIS_REGISTRY[name] = func
-        except (ImportError, AttributeError) as e:
+        except Exception as e:
             print(f"Unknown analysis '{name}': {e}")
+            print("Available analyses:")
+            for analysis in list_analyses():
+                print(analysis)
+
     return ANALYSIS_REGISTRY[name]
-
-
-def list_analyses() -> list[str]:
-
-    return list(ANALYSIS_REGISTRY.keys())

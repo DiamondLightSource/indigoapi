@@ -1,7 +1,7 @@
 import numpy as np
 from fastapi.testclient import TestClient
 
-from indigoapi.analyses.peak_fitting import gaussian
+from indigoapi.analyses.peak_fitting import gaussian, gaussian_fit
 from indigoapi.client import AnalysisClient
 from indigoapi.main import start_api
 
@@ -22,7 +22,7 @@ def test_gaussian_fit_with_client():
         client = AnalysisClient(base_url=str(client_http.base_url), session=client_http)  # type: ignore
 
         # Submit job
-        client.submit("gaussian_fit", x=x, y=y_noisy)
+        client.submit(gaussian_fit.__name__, x=x, y=y_noisy)
         result = client.get_result()
 
         # Validate results

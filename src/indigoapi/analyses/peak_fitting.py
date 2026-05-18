@@ -8,7 +8,7 @@ def gaussian(x: np.ndarray, amplitude: float, x0: float, sigma: float) -> np.nda
     return amplitude * np.exp(-((x - x0) ** 2) / (2 * sigma**2))
 
 
-@analysis("gaussian_fit")
+@analysis()
 def gaussian_fit(x: list[int | float], y: list):
     """
     data = {

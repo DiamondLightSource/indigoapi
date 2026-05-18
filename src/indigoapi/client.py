@@ -7,7 +7,7 @@ from uuid import UUID
 import numpy as np
 import requests
 
-from indigoapi.models import AnalysisResult
+from indigoapi.models import AnalysisRequest, AnalysisResult
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -66,12 +66,15 @@ class AnalysisClient:
 
         inputs = self._convert_to_serialisable(inputs)
 
-        data = {
-            "analysis_name": analysis_name,
-            "inputs": inputs,
-        }
+        analysis_request = AnalysisRequest(analysis_name=analysis_name, inputs=inputs)
+        json = analysis_request.model_dump(mode="json")
+        # data = {
+        #     "analysis_name": analysis_name,
+        #     "inputs": inputs,
+        # }
 
-        resp = self.session.post(f"{self.base_url}/analyse", json=data)
+        resp = self.session.post(f"{self.base_url}/analyse", json=json)
+
         resp.raise_for_status()
 
         request_id = UUID(resp.json()["request_id"])
@@ -89,6 +92,8 @@ class AnalysisClient:
         resp.raise_for_status()
 
         response = resp.json()
+
+        print(response)
 
         return AnalysisResult(**response)
 
@@ -137,7 +142,7 @@ class AnalysisClient:
 if __name__ == "__main__":
     import numpy as np
 
-    from indigoapi.analyses.peak_fitting import gaussian
+    from indigoapi.analyses.peak_fitting import gaussian, gaussian_fit
 
     x = np.linspace(0, 20, 200)
 
@@ -146,9 +151,9 @@ if __name__ == "__main__":
 
     client = AnalysisClient()
 
-    print(client.list_analyses())
+    # print(client.list_analyses())
 
-    client.submit("gaussian_fit", x=x, y=y)
+    client.submit(gaussian_fit.__name__, x=x, y=y)
 
     r = client.get_result()
 

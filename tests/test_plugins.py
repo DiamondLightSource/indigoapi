@@ -1,6 +1,8 @@
+import numpy as np
 import pytest
 
-from indigoapi.analyses.registry import get_analysis
+from indigoapi.analyses.peak_fitting import gaussian
+from indigoapi.analyses.registry import get_analysis, list_analyses
 
 
 @pytest.mark.asyncio
@@ -14,13 +16,15 @@ async def test_sync_plugin():
 
 
 @pytest.mark.asyncio
-async def test_async_plugin():
+async def test_sum_numbers():
 
-    fn = get_analysis("sleep")
+    print(list_analyses())
 
-    result = await fn({"seconds": 0})
+    fn = get_analysis("sum_numbers")
 
-    assert result == "done"
+    result = await fn([5, 10])
+
+    assert result == 15
 
 
 @pytest.mark.asyncio
@@ -28,7 +32,7 @@ async def test_sync_plugin_zero():
 
     fn = get_analysis("double")
 
-    result = await fn({"value": 0})
+    result = await fn(0)
 
     assert result == 0
 
@@ -38,19 +42,22 @@ async def test_sync_plugin_negative():
 
     fn = get_analysis("double")
 
-    result = await fn({"value": -3})
+    result = await fn(-3)
 
     assert result == -6
 
 
 @pytest.mark.asyncio
-async def test_async_plugin_nonzero():
+async def test_async_with_gauss():
 
-    fn = get_analysis("fit_gaussian")
+    fn = get_analysis("gaussian_fit")
 
-    result = await fn({"seconds": 0.1})
+    x = np.linspace(0, 10, 100)
+    y = gaussian(x, 10, 5, 1)
 
-    assert result == "done"
+    result = await fn(x, y)
+
+    assert result["amplitude"] == 10.0
 
 
 @pytest.mark.asyncio

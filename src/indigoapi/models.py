@@ -24,3 +24,9 @@ class AnalysisResult(AnalysisBaseModel):
     result: Any
     created_at: datetime
     finished_at: datetime
+
+
+if __name__ == "__main__":
+    request = AnalysisRequest(analysis_name="double", inputs={"number": 5})
+
+    print(request.request_id)
