@@ -32,7 +32,7 @@ class _StompListener(stomp.ConnectionListener):
         try:
             data = json.loads(frame.body)
 
-            job = AnalysisRequest(**data)
+            job = AnalysisRequest.model_validate(data)
 
             logger.info(f"RabbitMQ job received: {job.request_id}")
 
@@ -116,3 +116,10 @@ class RabbitMQListener:
 
             except Exception as e:
                 logger.warning(f"RabbitMQ connection failed: {e}")
+                logger.info(
+                    f"RabbitMQ connection attempt {attempt} to {self.host}:{self.port}"
+                )
+                delay_time = TIMEOUT + attempt
+
+                logger.info(f" Waiting {delay_time}s before next reconnect")
+                time.sleep(delay_time)

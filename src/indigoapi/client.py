@@ -118,6 +118,11 @@ class AnalysisClient:
             poll_interval,
         )
 
+    def get_endpoints(self):
+        resp = self.session.get(f"{self.base_url}/endpoints")
+        resp.raise_for_status()
+        return resp.json()
+
     def get_request_id_result(
         self,
         request_id: UUID,
@@ -156,5 +161,7 @@ if __name__ == "__main__":
     client.submit(gaussian_fit.__name__, x=x, y=y)
 
     r = client.get_result()
+
+    print(client.get_endpoints())
 
     print(r)

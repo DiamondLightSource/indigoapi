@@ -5,6 +5,7 @@ repos:
       - id: check-added-large-files
         exclude: ^uv.lock
       - id: check-yaml
+        exclude: ^helm/
       - id: check-merge-conflict
       - id: end-of-file-fixer
 

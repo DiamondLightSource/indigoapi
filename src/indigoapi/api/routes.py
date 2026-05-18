@@ -3,6 +3,7 @@ from typing import Any
 from uuid import UUID
 
 from fastapi import APIRouter, HTTPException, Request
+from fastapi.routing import APIRoute
 
 from indigoapi.analyses.registry import get_analysis, list_analyses
 from indigoapi.models import AnalysisRequest, AnalysisResult
@@ -64,3 +65,16 @@ async def result(request: Request, request_id: UUID):
         raise HTTPException(404, "Result not found")
     result, _ = queue.results[request_id]
     return result
+
+
+@ROUTER.get("/endpoints")
+async def get_endpoints():
+    return [
+        {
+            "path": route.path,
+            "methods": list(route.methods),
+            "name": route.name,
+        }
+        for route in ROUTER.routes
+        if isinstance(route, APIRoute)
+    ]
