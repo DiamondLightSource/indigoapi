@@ -1,5 +1,6 @@
 import logging
 import time
+from collections.abc import Callable
 from datetime import datetime
 from typing import Any
 from uuid import UUID
@@ -64,7 +65,7 @@ class AnalysisClient:
 
         return obj
 
-    def submit(self, analysis_name: str, **inputs: Any) -> UUID:
+    def submit(self, analysis: str | Callable, **inputs: Any) -> UUID:
         """
         Submit an analysis job.
 
@@ -74,12 +75,12 @@ class AnalysisClient:
 
         inputs = self._convert_to_serialisable(inputs)
 
+        analysis_name = (
+            analysis.__name__ if isinstance(analysis, Callable) else analysis
+        )
+
         analysis_request = AnalysisRequest(analysis_name=analysis_name, inputs=inputs)
         json = analysis_request.model_dump(mode="json")
-        # data = {
-        #     "analysis_name": analysis_name,
-        #     "inputs": inputs,
-        # }
 
         resp = self.session.post(f"{self.base_url}{ANALYSE_ROUTE}", json=json)
 
