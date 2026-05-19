@@ -108,7 +108,7 @@ The Helm values now expose RabbitMQ settings in the same shape as the app expect
 config:
   rabbitmq:
     enabled: true
-    host: localhost
+    host: ixx-analysis.diamond.ac.uk
     username: guest
     password: guest
     port: 61613
