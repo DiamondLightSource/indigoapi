@@ -23,17 +23,11 @@ from indigoapi import __version__
 print(f"Hello indigoapi {__version__}")
 ```
 
-Example server start command:
+To start the api server in dev mode on local host:
 
 ```bash
 uvicorn indigoapi.main:start_api --reload --factory --host 127.0.0.1 --port 8000
 ```
-
-Or if it is a commandline tool then you might put some example commands here:
-
-To start the api server run in dev mode:
-
-uvicorn indigoapi.main:start_api --reload --factory --host 127.0.0.1 --port 8000
 
 ## Overview
 
@@ -63,22 +57,18 @@ The app accepts analysis jobs via HTTP and stores results in memory for a config
 - AnalysisClient submits jobs to `/analyse`
 - Jobs are queued in `QueueManager`
 - Workers process jobs in FIFO order
-- Results are returned via `/result/id/{request_id}` or `/result/latest'
+- Results are returned via `/result/id/{request_id}` or `/result/latest`
 - Optional RabbitMQ listener can enqueue jobs automatically
 
-                     HTTP Client ────────--
+                     HTTP Client ────────--────────────────
+                        │ ▲                │              │
+                        ▼ │                ▼              ▼
+        Analysis <-── IndigoAPI ──---►  RabbitMQ ──---► Results
+           Job   ─---►    ▲                │
                           │                │
-                          ▼                ▼
-                      IndigoAPI ──---►   Results
-                          │                ▲
-                          ▼                │
-                    QueueManager           │
                           │                │   
-                          ▼                │
-                        Workers            │
-                          ▲                │
-                          │                │               
-                    RabbitListener <-── RabbitMQ
+                    RabbitListener <───────
+
 
 ## Kubernetes deployment
 
