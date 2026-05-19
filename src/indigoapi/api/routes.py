@@ -11,13 +11,20 @@ from indigoapi.queue_manager import QueueManager
 
 ROUTER = APIRouter()
 
+HEALTH_ROUTE = "/health"
+ANALYSES_ROUTE = "/get_analyses"
+ANALYSE_ROUTE = "/analyse"
+RESULT_LATEST_ROUTE = "/result/latest"
+RESULT_BY_ID_ROUTE = "/result/id/{request_id}"
+ENDPOINTS_ROUTE = "/endpoints"
 
-@ROUTER.get("/health")
+
+@ROUTER.get(HEALTH_ROUTE)
 async def health():
     return {"status": "ok"}
 
 
-@ROUTER.get("/get_analyses")
+@ROUTER.get(ANALYSES_ROUTE)
 async def available_analyses() -> list[dict[str, Any]]:
     analyses_info = []
     for name in list_analyses():
@@ -40,14 +47,14 @@ async def available_analyses() -> list[dict[str, Any]]:
     return analyses_info
 
 
-@ROUTER.post("/analyse")
+@ROUTER.post(ANALYSE_ROUTE)
 async def analyse(request: Request, job: AnalysisRequest):
     queue: QueueManager = request.app.state.queue_manager
     await queue.enqueue(job)
     return {"request_id": job.request_id}
 
 
-@ROUTER.get("/result/latest", response_model=AnalysisResult)
+@ROUTER.get(RESULT_LATEST_ROUTE, response_model=AnalysisResult)
 async def get_latest_result(request: Request):
 
     queue_manager = request.app.state.queue_manager
@@ -58,7 +65,7 @@ async def get_latest_result(request: Request):
     return queue_manager.latest_result
 
 
-@ROUTER.get("/result/id/{request_id}")
+@ROUTER.get(RESULT_BY_ID_ROUTE)
 async def result(request: Request, request_id: UUID):
     queue: QueueManager = request.app.state.queue_manager
     if request_id not in queue.results:
@@ -67,7 +74,7 @@ async def result(request: Request, request_id: UUID):
     return result
 
 
-@ROUTER.get("/endpoints")
+@ROUTER.get(ENDPOINTS_ROUTE)
 async def get_endpoints():
     return [
         {

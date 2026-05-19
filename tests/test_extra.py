@@ -138,6 +138,8 @@ def test_client_get_result_no_latest():
     client = AnalysisClient(session=Mock())
     result = client.get_result()
 
+    print(result)
+
     assert result.status == "error"
     assert result.analysis_name == ""
 

@@ -39,6 +39,25 @@ uvicorn indigoapi.main:start_api --reload --factory --host 127.0.0.1 --port 8000
 
 The app accepts analysis jobs via HTTP and stores results in memory for a configurable TTL. Jobs can also be ingested from RabbitMQ if `rabbitmq.enabled` is set.
 
+## Sending/Recieving results using the python client
+
+```python
+
+    from indigoapi.client import AnalysisClient
+
+    client = AnalysisClient("ixx-analysis.diamond.ac.uk")
+
+    print(client.list_analyses()) #see available analyses
+
+    client.submit("name_of_analysis", x=x, y=y)
+
+    result = client.get_result() #returns an AnalysisResult basemodel
+
+    print(result)
+
+```
+
+
 ### Request flow
 
 - HTTP client submits jobs to `/analyse`

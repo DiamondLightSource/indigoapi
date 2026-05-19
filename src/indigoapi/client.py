@@ -7,6 +7,14 @@ from uuid import UUID
 import numpy as np
 import requests
 
+from indigoapi.api.routes import (
+    ANALYSE_ROUTE,
+    ANALYSES_ROUTE,
+    ENDPOINTS_ROUTE,
+    HEALTH_ROUTE,
+    RESULT_BY_ID_ROUTE,
+    RESULT_LATEST_ROUTE,
+)
 from indigoapi.models import AnalysisRequest, AnalysisResult
 
 logging.basicConfig(level=logging.INFO)
@@ -28,12 +36,12 @@ class AnalysisClient:
         self.session = session or requests.Session()
 
     def list_analyses(self) -> list[dict[str, Any]]:
-        resp = self.session.get(f"{self.base_url}/get_analyses")
+        resp = self.session.get(f"{self.base_url}{ANALYSES_ROUTE}")
         resp.raise_for_status()
         return resp.json()
 
     def health(self) -> dict[str, Any]:
-        resp = self.session.get(f"{self.base_url}/health")
+        resp = self.session.get(f"{self.base_url}{HEALTH_ROUTE}")
         resp.raise_for_status()
         return resp.json()
 
@@ -73,7 +81,7 @@ class AnalysisClient:
         #     "inputs": inputs,
         # }
 
-        resp = self.session.post(f"{self.base_url}/analyse", json=json)
+        resp = self.session.post(f"{self.base_url}{ANALYSE_ROUTE}", json=json)
 
         resp.raise_for_status()
 
@@ -84,7 +92,9 @@ class AnalysisClient:
 
     def request_result(self, request_id: UUID) -> AnalysisResult | None:
 
-        resp = self.session.get(f"{self.base_url}/result/id/{request_id}")
+        route = RESULT_BY_ID_ROUTE.format(request_id=request_id)
+
+        resp = self.session.get(f"{self.base_url}{route}")
 
         if resp.status_code == 404:
             return None
@@ -93,17 +103,20 @@ class AnalysisClient:
 
         response = resp.json()
 
-        print(response)
-
         return AnalysisResult(**response)
 
     def get_result(
         self,
-        timeout: float = 30.0,
-        poll_interval: float = 0.1,
     ) -> AnalysisResult:
 
-        if self.latest_request_id is None:
+        resp = self.session.get(f"{self.base_url}{RESULT_LATEST_ROUTE}")
+        resp.raise_for_status()
+
+        try:
+            return AnalysisResult.model_validate(resp.json())
+
+        except Exception as e:
+            logger.error(e)
             return AnalysisResult(
                 status="error",
                 analysis_name="",
@@ -112,14 +125,8 @@ class AnalysisClient:
                 finished_at=datetime.now(),
             )
 
-        return self.get_request_id_result(
-            self.latest_request_id,
-            timeout,
-            poll_interval,
-        )
-
     def get_endpoints(self):
-        resp = self.session.get(f"{self.base_url}/endpoints")
+        resp = self.session.get(f"{self.base_url}{ENDPOINTS_ROUTE}")
         resp.raise_for_status()
         return resp.json()
 
