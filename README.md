@@ -29,12 +29,6 @@ Example server start command:
 uvicorn indigoapi.main:start_api --reload --factory --host 127.0.0.1 --port 8000
 ```
 
-```python
-from indigoapi import __version__
-
-print(f"Hello indigoapi {__version__}")
-```
-
 Or if it is a commandline tool then you might put some example commands here:
 
 To start the api server run in dev mode:
@@ -52,6 +46,20 @@ The app accepts analysis jobs via HTTP and stores results in memory for a config
 - Workers process jobs in FIFO order
 - Results are returned via `/result/id/{request_id}`
 - Optional RabbitMQ listener can enqueue jobs automatically
+
+                     HTTP Client ────────--
+                          │                │
+                          ▼                ▼
+                      IndigoAPI ──---►   Results
+                          │                ▲
+                          ▼                │
+                    QueueManager           │
+                          │                │   
+                          ▼                │
+                        Workers            │
+                          ▲                │
+                          │                │               
+                    RabbitListener <-── RabbitMQ
 
 ## Kubernetes deployment
 
