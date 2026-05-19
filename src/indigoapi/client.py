@@ -107,16 +107,38 @@ class AnalysisClient:
 
     def get_result(
         self,
+        timeout: float = 5.0,
+        poll_interval: float = 0.1,
     ) -> AnalysisResult:
 
-        resp = self.session.get(f"{self.base_url}{RESULT_LATEST_ROUTE}")
-        resp.raise_for_status()
+        start_time = time.time()
 
-        try:
-            return AnalysisResult.model_validate(resp.json())
+        while True:
+            try:
+                resp = self.session.get(f"{self.base_url}{RESULT_LATEST_ROUTE}")
+                resp.raise_for_status()
+                return AnalysisResult.model_validate(resp.json())
 
-        except Exception as e:
-            logger.error(e)
+            except Exception as e:
+                logger.error(e)
+                time.sleep(poll_interval)
+
+                if time.time() - start_time > timeout:
+                    return AnalysisResult(
+                        status="error",
+                        analysis_name="",
+                        result=None,
+                        created_at=datetime.now(),
+                        finished_at=datetime.now(),
+                    )
+
+    def get_last_submitted_result(
+        self,
+        timeout: float = 5.0,
+        poll_interval: float = 0.1,
+    ) -> AnalysisResult:
+
+        if self.latest_request_id is None:
             return AnalysisResult(
                 status="error",
                 analysis_name="",
@@ -124,6 +146,12 @@ class AnalysisClient:
                 created_at=datetime.now(),
                 finished_at=datetime.now(),
             )
+
+        return self.get_request_id_result(
+            self.latest_request_id,
+            timeout,
+            poll_interval,
+        )
 
     def get_endpoints(self):
         resp = self.session.get(f"{self.base_url}{ENDPOINTS_ROUTE}")
