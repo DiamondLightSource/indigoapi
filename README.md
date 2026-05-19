@@ -60,10 +60,10 @@ The app accepts analysis jobs via HTTP and stores results in memory for a config
 
 ### Request flow
 
-- HTTP client submits jobs to `/analyse`
+- AnalysisClient submits jobs to `/analyse`
 - Jobs are queued in `QueueManager`
 - Workers process jobs in FIFO order
-- Results are returned via `/result/id/{request_id}`
+- Results are returned via `/result/id/{request_id}` or `/result/latest'
 - Optional RabbitMQ listener can enqueue jobs automatically
 
                      HTTP Client ────────--
