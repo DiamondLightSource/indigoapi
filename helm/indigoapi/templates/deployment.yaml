@@ -1,65 +1,96 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: indigoapi
+  name: {{ include "indigoapi.fullname" . }}
+  labels:
+    {{- include "indigoapi.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
-      app: indigoapi
+      {{- include "indigoapi.selectorLabels" . | nindent 6 }}
   template:
     metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       labels:
-        app: indigoapi
+        {{- include "indigoapi.labels" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
     spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       containers:
-        - name: indigoapi
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
-
+        - name: {{ .Chart.Name }}
+          {{- with .Values.securityContext }}
           securityContext:
-            runAsUser: {{ .Values.securityContext.runAsUser }}
-            runAsGroup: {{ .Values.securityContext.runAsGroup }}
-            runAsNonRoot: {{ .Values.securityContext.runAsNonRoot }}
-            allowPrivilegeEscalation: {{ .Values.securityContext.allowPrivilegeEscalation }}
-            readOnlyRootFilesystem: {{ .Values.securityContext.readOnlyRootFilesystem }}
-
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
-            - containerPort: {{ .Values.service.port }}
-
+            - name: http
+              containerPort: {{ .Values.service.port }}
+              protocol: TCP
           env:
-            - name: RABBITMQ__ENABLED
-              value: "{{ .Values.config.rabbitmq.enabled | quote }}"
-            - name: RABBITMQ__HOST
-              value: "{{ .Values.config.rabbitmq.host }}"
-            - name: RABBITMQ__PORT
-              value: "{{ .Values.config.rabbitmq.port | quote }}"
-            - name: RABBITMQ__USERNAME
-              value: "{{ .Values.config.rabbitmq.username }}"
-            - name: RABBITMQ__PASSWORD
-              value: "{{ .Values.config.rabbitmq.password }}"
-
-            - name: QUEUE__WORKERS
-              value: "{{ .Values.config.queue.workers | quote }}"
-
-{{- range $i, $path := .Values.config.plugins.paths }}
-            - name: PLUGINS__PATHS__{{ $i }}
-              value: "{{ $path }}"
-{{- end }}
-
-{{- range $i, $dest := .Values.config.rabbitmq.destinations }}
-            - name: RABBITMQ__DESTINATIONS__{{ $i }}
-              value: "{{ $dest }}"
-{{- end }}
-
+            - name: CONFIG_PATH
+              value: "/etc/config/config.yaml"
+          {{- with .Values.livenessProbe }}
+          livenessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.readinessProbe }}
+          readinessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.resources }}
           resources:
-{{ toYaml .Values.resources | indent 12 }}
-
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+            - name: config-volume
+              mountPath: "/etc/config/config.yaml"
+              subPath: config.yaml
+          {{- with .Values.volumeMounts }}
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      volumes:
+      {{- with .Values.volumes }}
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+        - name: config-volume
+          projected:
+            sources:
+            - configMap:
+                name: {{ include "indigoapi.fullname" . }}-config
+      {{- with .Values.nodeSelector }}
       nodeSelector:
-{{ toYaml .Values.nodeSelector | indent 8 }}
-
-      tolerations:
-{{ toYaml .Values.tolerations | indent 8 }}
-
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       affinity:
-{{ toYaml .Values.affinity | indent 8 }}
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: app.kubernetes.io/name
+                    operator: In
+                    values:
+                      - indigoapi
+                  - key: app.kubernetes.io/instance
+                    operator: In
+                    values:
+                      - {{ .Release.Name }}
+              topologyKey: "kubernetes.io/hostname"
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
