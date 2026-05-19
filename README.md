@@ -116,6 +116,7 @@ config:
       - "/topic/public.worker.event"
       - "/topic/gda.messages.scan"
       - "/topic/gda.messages.processing"
+      - "/topic/public.analysis.trigger"
 ```
 
 ## Helm usage
