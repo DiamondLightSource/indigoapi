@@ -186,17 +186,12 @@ if __name__ == "__main__":
 
     x = np.linspace(0, 20, 200)
 
-    y = gaussian(x, 10, 5, 1)
-    y = y + np.random.rand(y.shape[-1]) / 5
+    y = gaussian(x, 10, 5, 1) + (np.random.rand(x.shape[-1]) / 5)
 
     client = AnalysisClient()
 
-    # print(client.list_analyses())
-
     client.submit(gaussian_fit.__name__, x=x, y=y)
 
-    r = client.get_result()
+    print(client.get_result())
 
     print(client.get_endpoints())
-
-    print(r)
