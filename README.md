@@ -60,7 +60,7 @@ The app accepts analysis jobs via HTTP and stores results in memory for a config
 - Results are returned via `/result/id/{request_id}` or `/result/latest`
 - Optional RabbitMQ listener can enqueue jobs automatically
 
-                     HTTP Client ────────--────────────────
+                     AnalysisClient ─────--────────────────
                         │ ▲                │              │
                         ▼ │                ▼              ▼
         Analysis <-── IndigoAPI ──---►  RabbitMQ ──---► Results
