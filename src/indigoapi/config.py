@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 from typing import Self
 
@@ -63,7 +64,15 @@ class Config(BaseSettings):
     )
 
     @classmethod
-    def load_config(cls, path: str | Path = "config.yaml") -> Self:
+    def load_config(cls, path: str | Path | None = None) -> Self:
+        if path is None:
+            env_path = os.getenv("CONFIG_PATH")
+            if env_path:
+                path = Path(env_path)
+            else:
+                candidate = Path("/etc/config/config.yaml")
+                path = candidate if candidate.exists() else Path("config.yaml")
+
         path = Path(path)
 
         data = {}
@@ -74,3 +83,7 @@ class Config(BaseSettings):
         # 1. load YAML into model
         # 2. allow env vars to override it
         return cls(**data)
+
+
+def load_config(path: str | Path | None = None) -> Config:
+    return Config.load_config(path)

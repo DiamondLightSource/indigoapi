@@ -26,3 +26,4 @@ rabbitmq:
     - "/topic/public.worker.event" #bluesky scans
     - "/topic/gda.messages.scan" # gda scans
     - "/topic/gda.messages.processing" # dawn stuff
+    - "/topic/public.analysis.trigger" # custom topic for triggering analyses from other services

@@ -63,7 +63,7 @@ async def result(request: Request, request_id: UUID):
     queue: QueueManager = request.app.state.queue_manager
     if request_id not in queue.results:
         raise HTTPException(404, "Result not found")
-    result, _ = queue.results[request_id]
+    result, duration = queue.results[request_id]
     return result
 
 

@@ -5,10 +5,9 @@
 
 # indigoapi
 
-An API for small fast data analysis jobs at Diamond Light Source
+An API for small fast data analysis jobs at Diamond Light Source.
 
-This is where you should write a short paragraph that describes what your module does,
-how it does it, and why people should use it.
+`indigoapi` exposes an HTTP API to submit analysis jobs, return queued results, and optionally consume messages from RabbitMQ.
 
 Source          | <https://github.com/DiamondLightSource/indigoapi>
 :---:           | :---:
@@ -16,9 +15,19 @@ PyPI            | `pip install indigoapi`
 Docker          | `docker run ghcr.io/diamondlightsource/indigoapi:latest`
 Releases        | <https://github.com/DiamondLightSource/indigoapi/releases>
 
-This is where you should put some images or code snippets that illustrate
-some relevant examples. If it is a library then you might put some
-introductory code here:
+Example Python usage:
+
+```python
+from indigoapi import __version__
+
+print(f"Hello indigoapi {__version__}")
+```
+
+Example server start command:
+
+```bash
+uvicorn indigoapi.main:start_api --reload --factory --host 127.0.0.1 --port 8000
+```
 
 ```python
 from indigoapi import __version__
@@ -32,99 +41,104 @@ To start the api server run in dev mode:
 
 uvicorn indigoapi.main:start_api --reload --factory --host 127.0.0.1 --port 8000
 
-The structure of this app is defined below. IndigoAPI can add jobs to the queue in one of two ways. 
-Either you send a request, via the client or any http request to the API endpoint which adds it to the queue. 
+## Overview
 
-Alternatively jobs can be added automatically by listening to a RabbitMQ message stream. 
+The app accepts analysis jobs via HTTP and stores results in memory for a configurable TTL. Jobs can also be ingested from RabbitMQ if `rabbitmq.enabled` is set.
 
-Either way jobs are added to the queue and run first-in-first-out. 
-Once jobs are run, results can be returned to the client or via a reuqest with the specific job uuid.
+### Request flow
 
-Results are kept for a defined period of time, periodically the expired results are checked and removed.
+- HTTP client submits jobs to `/analyse`
+- Jobs are queued in `QueueManager`
+- Workers process jobs in FIFO order
+- Results are returned via `/result/id/{request_id}`
+- Optional RabbitMQ listener can enqueue jobs automatically
 
+## Kubernetes deployment
 
-                         HTTP Client ────────
-                              │             │
-                              ▼             ▼
-                          IndigoAPI ──► Results        
-                              │ 
-                              ▼ 
-                        QueueManager 
-                              │                  
-                              ▼
-                            Workers
-                              ▲
-                              │
-            RabbitMQ ──► RabbitListener
+This repository includes a Helm chart under `./helm/helm/indigoapi`.
 
+### Config support
+
+The service supports configuration from one of these sources:
+
+- `CONFIG_PATH` environment variable
+- mounted config file at `/etc/config/config.yaml`
+- local `config.yaml` file in the current working directory
+
+In Kubernetes, the Helm chart mounts `config.yaml` from a `ConfigMap` and sets:
+
+```yaml
+env:
+  - name: CONFIG_PATH
+    value: "/etc/config/config.yaml"
 ```
-python -m indigoapi --version
+
+### RabbitMQ config
+
+The Helm values now expose RabbitMQ settings in the same shape as the app expects:
+
+```yaml
+config:
+  rabbitmq:
+    enabled: true
+    host: localhost
+    username: guest
+    password: guest
+    port: 61613
+    destinations:
+      - "/topic/public.worker.event"
+      - "/topic/gda.messages.scan"
+      - "/topic/gda.messages.processing"
 ```
+
+## Helm usage
 
 1. Build and push your Docker image
 
-Your chart references an image like:
-
-image:
-  repository: ghcr.io/diamondlightsource/indigoapi
-  tag: latest
-
-So first build and push it.
-
-Example:
-
+```bash
 podman build -t ghcr.io/diamondlightsource/indigoapi:latest .
 podman push ghcr.io/diamondlightsource/indigoapi:latest
+```
 
+2. Render the chart
 
-2. Check the chart renders correctly
+```bash
+helm template indigoapi ./helm/helm/indigoapi
+```
 
-Before installing, render the templates:
+3. Dry-run validation
 
-helm template indigoapi ./helm/indigoapi
+```bash
+helm template indigoapi ./helm/helm/indigoapi | kubectl apply --dry-run=client -f -
+```
 
-You should see:
+4. Install the chart
 
-Deployment
-Service
-ConfigMap
+```bash
+helm install indigoapi ./helm/helm/indigoapi
+```
 
-You can also validate against Kubernetes:
+5. Verify the deployment
 
-helm template indigoapi ./helm/indigoapi | kubectl apply --dry-run=client -f -
-3. Install the chart
-
-From the root of your repo:
-
-helm install indigoapi ./helm/indigoapi
-
-indigoapi here is the release name.
-
-Helm will create:
-
-Deployment
-Service
-ConfigMap
-
-in your cluster.
-
-4. Check the deployment
-
-Check pods:
-
+```bash
 kubectl get pods
-
-Example result:
-
-indigoapi-0.1.0-7f6c5c9fbb-abcde   Running
-
-Check services:
-
 kubectl get svc
-5. Test the API
+```
 
-Port forward the service:
+6. Test the API
 
-kubectl port-forward svc/indigoapi-0.1.0 8000:8000
+```bash
+kubectl port-forward svc/indigoapi 8000:8000
+```
 
+Then open:
+
+```text
 http://localhost:8000/docs
+```
+
+## Notes
+
+- The chart name has been updated to `indigoapi`.
+- The config file is mounted via a `ConfigMap` and loaded from `/etc/config/config.yaml`.
+- The Helm chart currently creates a `Deployment`, `Service`, and `ConfigMap`.
