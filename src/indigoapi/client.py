@@ -127,7 +127,7 @@ class AnalysisClient:
                 logger.error(e)
                 time.sleep(poll_interval)
 
-                if time.time() - start_time > timeout:
+                if (timeout > 0) and (time.time() - start_time > timeout):
                     return AnalysisResult(
                         status="error",
                         analysis_name="",
