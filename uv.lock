@@ -3366,8 +3366,8 @@ wheels = [
 
 [[package]]
 name = "xrpd-toolbox"
-version = "0.1.2.dev4+gf054b03e4.d20260513"
-source = { git = "https://github.com/DiamondLightSource/xrpd-toolbox.git?rev=main#4d76e03f61ff4e8c69874ce416fdb10cd541eeb6" }
+version = "0.1.2.2.dev1+g53ffcf456"
+source = { git = "https://github.com/DiamondLightSource/xrpd-toolbox.git?rev=main#53ffcf4569a3fc9e8131e442ff3755889a4375f8" }
 dependencies = [
     { name = "dans-diffraction" },
     { name = "gql" },
