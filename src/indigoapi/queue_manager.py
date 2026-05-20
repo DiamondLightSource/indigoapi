@@ -4,7 +4,7 @@ import time
 from datetime import datetime
 from uuid import UUID
 
-from xrpd_toolbox.utils.messenger import Messenger
+from xrpd_toolbox.utils.messenger import DEFAULT_DII_PROCESSED_DESTINATION, Messenger
 
 from indigoapi.analyses.registry import get_analysis
 from indigoapi.models import AnalysisRequest, AnalysisResult
@@ -57,7 +57,10 @@ class QueueManager:
                 )
 
                 if self.messenger is not None:
-                    self.messenger.send_processed_data(analysis_result)
+                    self.messenger.send_message(
+                        DEFAULT_DII_PROCESSED_DESTINATION,
+                        analysis_result.model_dump_json(),
+                    )
 
             self.results[job.request_id] = (analysis_result, time.time())
             # store latest result
