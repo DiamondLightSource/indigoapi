@@ -70,7 +70,7 @@ def load_plugins_from_dir(path: str | Path, register_all: bool = False):
             spec = importlib.util.spec_from_file_location(module_name, pyfile)  # type: ignore
             module = importlib.util.module_from_spec(spec)  # type: ignore
             spec.loader.exec_module(module)
-            logger.info(f"Loading plugin from {pyfile}")
+            logger.info(f"Loading plugin from {pyfile.stem}")
             if register_all:
                 register_module_functions(module)
 
