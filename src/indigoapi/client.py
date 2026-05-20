@@ -33,6 +33,9 @@ class AnalysisClient:
         session: requests.Session | None = None,
     ):
         self.base_url = base_url.rstrip("/")
+
+        self.base_url = base_url.rstrip("/")
+
         self.latest_request_id: UUID | None = None
         self.session = session or requests.Session()
 

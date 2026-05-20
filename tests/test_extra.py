@@ -43,16 +43,29 @@ def test_cli_serve_invokes_uvicorn(monkeypatch):
     runner = CliRunner()
     called = {}
 
-    def fake_run(app, host=None, port=None):
+    def fake_run(app, host=None, port=None, factory=None, reload=None, workers=None):
         called["host"] = host
         called["port"] = port
         called["app"] = app
 
     monkeypatch.setattr("indigoapi.__main__.uvicorn.run", fake_run)
-    result = runner.invoke(main, ["serve"])
+
+    class FakeConfig:
+        class server:  # noqa
+            host = "127.0.0.1"
+            port = 8000
+
+        class queue:  # noqa
+            workers = 1
+
+    result = runner.invoke(
+        main,
+        ["serve"],
+        obj={"config": FakeConfig()},
+    )
 
     assert result.exit_code == 0
-    assert called["host"] == "0.0.0.0"
+    assert called["host"] == "127.0.0.1"
     assert called["port"] == 8000
 
 
