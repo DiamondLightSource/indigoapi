@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 class QueueManager:
     def __init__(self, workers: int = 2, messenger: Messenger | None = None):
-        self.queue: asyncio.Queue[AnalysisRequest] = asyncio.Queue()
+        self.queue: asyncio.Queue[AnalysisRequest] = asyncio.Queue(maxsize=0)  # 0 = inf
         self.results: dict[UUID, tuple[AnalysisResult, float]] = {}
         self.workers = workers
         self.latest_result: AnalysisResult | None = None
