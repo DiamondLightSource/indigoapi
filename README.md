@@ -36,7 +36,7 @@ indigoapi serve
 
 ## Overview
 
-The app accepts analysis jobs via HTTP and stores results in memory for a configurable TTL. Jobs can also be ingested from RabbitMQ if `rabbitmq.enabled` is set.
+The app accepts analysis jobs via HTTP or the client and stores results in memory for a configurable time-to-live. Jobs can also be ingested from RabbitMQ if `rabbitmq.enabled` is set.
 
 ## Sending/Recieving results using the python client
 
