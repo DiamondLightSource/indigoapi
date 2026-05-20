@@ -5,6 +5,7 @@ import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from xrpd_toolbox.utils.messenger import Messenger
 
 from indigoapi.analyses import MODULE_NAMES
 from indigoapi.api.routes import ROUTER
@@ -23,7 +24,18 @@ async def lifespan(app: FastAPI):
 
     rabbit_task = None
 
-    queue_manager = QueueManager(workers=config.queue.workers)
+    if config.rabbitmq.enabled:
+        messenger = Messenger(
+            host=config.rabbitmq.host,
+            port=config.rabbitmq.port,
+            username=config.rabbitmq.username,
+            password=config.rabbitmq.password,
+            auto_subscribe=False,
+        )
+    else:
+        messenger = None
+
+    queue_manager = QueueManager(workers=config.queue.workers, messenger=messenger)
 
     workers = [
         asyncio.create_task(queue_manager.worker())
