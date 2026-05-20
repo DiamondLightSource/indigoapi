@@ -27,6 +27,11 @@ To start the api server in dev mode on local host:
 
 ```bash
 uvicorn indigoapi.main:start_api --reload --factory --host 127.0.0.1 --port 8000
+
+or
+
+indigoapi serve
+
 ```
 
 ## Overview
